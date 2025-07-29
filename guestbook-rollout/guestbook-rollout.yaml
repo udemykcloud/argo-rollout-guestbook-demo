@@ -4,8 +4,8 @@ metadata:
   name: guestbook-ui
   namespace: default
 spec:
-  replicas: 5
-  revisionHistoryLimit: 3
+  replicas: 3
+  revisionHistoryLimit: 2
   selector:
     matchLabels:
       app: guestbook-ui
@@ -16,16 +16,24 @@ spec:
     spec:
       containers:
         - name: guestbook-ui
-          image: udemykcloud534/guestbook:blue # Blue background (Version 1)
+          image: udemykcloud534/guestbook:blue
           ports:
-            - containerPort: 80
+            - containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          imagePullSecrets:
+            - name: dockerhub-secret
   strategy:
     canary:
       steps:
         - setWeight: 20
         - pause: {}
         - setWeight: 50
-        - pause: { duration: 10 }
+        - pause: {}
         - setWeight: 100
       canaryService: guestbook-ui-canary
       stableService: guestbook-ui
@@ -41,7 +49,7 @@ metadata:
 spec:
   ports:
     - port: 80
-      targetPort: 80
+      targetPort: 8080
   selector:
     app: guestbook-ui
 ---
@@ -53,7 +61,7 @@ metadata:
 spec:
   ports:
     - port: 80
-      targetPort: 80
+      targetPort: 8080
   selector:
     app: guestbook-ui
 ---
